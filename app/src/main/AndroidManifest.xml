@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application>
-        <meta-data android:name="org.godotengine.plugin.v1.dateTimePickerPlugin"
+        <meta-data android:name="org.godotengine.plugin.v2.dateTimePickerPlugin"
             android:value="com.oddsockgames.dateTimePickerPlugin.DateTimePickerPlugin" />
     </application>
 

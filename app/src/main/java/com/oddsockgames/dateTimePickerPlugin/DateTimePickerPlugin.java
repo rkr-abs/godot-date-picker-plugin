@@ -21,13 +21,13 @@ import java.util.Calendar;
 import java.util.Set;
 
 public class DateTimePickerPlugin extends GodotPlugin {
-    private final Context context;
+    private final Godot context;
     private final Activity activity;
     private FrameLayout layout = null;
 
     public DateTimePickerPlugin(Godot godot) {
         super(godot);
-        context = godot.getContext();
+        context = godot;
         activity = godot.getActivity();
     }
 
@@ -41,51 +41,60 @@ public class DateTimePickerPlugin extends GodotPlugin {
     @Override
     public Set<SignalInfo> getPluginSignals() {
         Set<SignalInfo> signals = new ArraySet<>();
-        signals.add(new SignalInfo("onDateTimePicked", String.class, Dictionary.class));
+        signals.add(new SignalInfo("onDatePicked", String.class, Dictionary.class));
+        signals.add(new SignalInfo("onTimePicked", String.class, Dictionary.class));
+
         return signals;
     }
 
-    @Nullable
-    @Override
-    public View onMainCreate(Activity activity) {
-        layout = new FrameLayout(activity);
-        return layout;
+
+
+    @UsedByGodot
+    public void showDatePicker() {
+        showDatePicker("", new Dictionary());
     }
 
     @UsedByGodot
-    public void showDateTimePicker() {
-        showDateTimePicker("");
-    }
+    public void showTimePicker() {showTimePicker("");}
 
     @UsedByGodot
-    public void showDateTimePicker(String reference) {
+    public void showTimePicker(String reference) {
         activity.runOnUiThread(() -> {
 
             final Calendar calendar = Calendar.getInstance();
-            int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
-            int currentMonth = calendar.get(Calendar.MONTH);
-            int currentYear = calendar.get(Calendar.YEAR);
             int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
             int currentMinute = calendar.get(Calendar.MINUTE);
 
-            Dictionary selectedDateTime = new Dictionary();
+            Dictionary selectedTime = new Dictionary();
 
-            TimePickerDialog timePicker = new TimePickerDialog(context,
+            TimePickerDialog timePicker = new TimePickerDialog(context.getActivity(),
                     (TimePickerDialog.OnTimeSetListener) (view, hourOfDay, minute) -> {
-                        selectedDateTime.put("hour", hourOfDay);
-                        selectedDateTime.put("minute", minute);
+                        selectedTime.put("hour", hourOfDay);
+                        selectedTime.put("minute", minute);
 
-                        emitSignal("onDateTimePicked", reference, selectedDateTime);
+                        emitSignal("onTimePicked", reference, selectedTime);
                     }, currentHour, currentMinute, false);
 
-            DatePickerDialog datePicker = new DatePickerDialog(context,
-                    (view, year, monthOfYear, dayOfMonth) -> {
-                        selectedDateTime.put("day", dayOfMonth);
-                        selectedDateTime.put("month", (monthOfYear + 1));
-                        selectedDateTime.put("year", year);
+            timePicker.show();
+        });
+    }
+    @UsedByGodot
+    public void showDatePicker(String reference, Dictionary godotDictionary) {
+        activity.runOnUiThread(() -> {
+            int day = (int) godotDictionary.get("day");
+            int month = (int) godotDictionary.get("month");
+            int curYear = (int) godotDictionary.get("year");
 
-                        timePicker.show();
-                    }, currentYear, currentMonth, currentDay);
+            Dictionary selectedDate = new Dictionary();
+
+            DatePickerDialog datePicker = new DatePickerDialog(context.getActivity(),
+                    (view, year, monthOfYear, dayOfMonth) -> {
+                        selectedDate.put("day", dayOfMonth);
+                        selectedDate.put("month", (monthOfYear + 1));
+                        selectedDate.put("year", year);
+
+                        emitSignal("onDatePicked", reference, selectedDate);
+                    }, curYear, month - 1, day);
 
             datePicker.show();
         });
